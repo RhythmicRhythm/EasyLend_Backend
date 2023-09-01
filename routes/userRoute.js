@@ -11,6 +11,18 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
+//Generate Acc no
+function generateAccountNumber() {
+  const min = 2000000000;
+  const max = 2999999999;
+  const accountNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // Convert the account number to a string and pad it with leading zeros if necessary
+  const accountNumberString = accountNumber.toString().padStart(11, "0");
+
+  return accountNumberString;
+}
+
 router.post("/register", async (req, res) => {
   const { firstname, lastname, password, email } = req.body;
 
@@ -28,7 +40,6 @@ router.post("/register", async (req, res) => {
       return res.status(404).json({ error: "email verifier" });
     }
 
-    
     if (
       data.formatCheck === "true" &&
       data.disposableCheck === "false" &&
@@ -98,10 +109,12 @@ router.post("/register", async (req, res) => {
           `,
       };
 
+      // Generate a unique account number
+      const accountNumber = generateAccountNumber();
+
       // Attempt to send the welcome email
       transporter.sendMail(mailOptions, (error) => {
         if (error) {
-          
           return res.status(400).json({ error: "error sending mail" });
         } else {
           // Create new user
@@ -110,6 +123,7 @@ router.post("/register", async (req, res) => {
             lastname,
             email,
             password,
+            accountNumber: accountNumber,
           });
 
           //   Generate Token

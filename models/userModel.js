@@ -27,6 +27,15 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please add a password"],
       minLength: [8, "Password must be up to 8 characters"],
     },
+    accountNumber: Number,
+    accountBalance: {
+        type: Number,
+        default: 0,
+    },
+    borrowedBalance: {
+        type: Number,
+        default: 0,
+    },
   },
   {
     timestamps: true,
