@@ -28,7 +28,7 @@ router.post("/register", async (req, res) => {
       return res.status(404).json({ error: "email verifier" });
     }
 
-    console.log(data);
+    
     if (
       data.formatCheck === "true" &&
       data.disposableCheck === "false" &&
@@ -48,7 +48,7 @@ router.post("/register", async (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
-        subject: "Welcome to SIMPR FUERTE",
+        subject: "Welcome to EASYLEND",
         html: `
             <html>
               <head>
@@ -87,11 +87,11 @@ router.post("/register", async (req, res) => {
               </head>
               <body>
                 <div class="container">
-                  <h1>Welcome to SIMPRE FUERTE, Construction & Engineering Services Ltd </h1>
+                  <h1>Welcome to EASYLEND,</h1>
                   <p><strong>Dear ${firstname} ${lastname},</strong></p>
                   <p>Welcome, We are excited to have you as a member.</p>
                   <p>Thank you for registering with us.</p>
-                  <p class="signature">Best regards,<br>SIMPRE FUERTE Team</p>
+                  <p class="signature">Best regards,<br>EASYLEND Team</p>
                 </div>
               </body>
             </html>
@@ -101,7 +101,7 @@ router.post("/register", async (req, res) => {
       // Attempt to send the welcome email
       transporter.sendMail(mailOptions, (error) => {
         if (error) {
-          console.error(error);
+          
           return res.status(400).json({ error: "error sending mail" });
         } else {
           // Create new user
