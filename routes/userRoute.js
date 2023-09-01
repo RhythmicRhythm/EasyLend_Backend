@@ -4,13 +4,13 @@ const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
+const protect = require("../middleWare/authMiddleware");
 const verifier = new (require("email-verifier"))(process.env.EMAIL_VERIFY);
 
 // Generate Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
-
 //Generate Acc no
 function generateAccountNumber() {
   const min = 2000000000;
@@ -173,7 +173,7 @@ router.post("/login", async (req, res) => {
 
   if (!user) {
     res.status(400);
-    return res.status(400).json({ error: "user not found! please login" });
+    return res.status(400).json({ error: "user not found! please register" });
   }
 
   // User exists, check if password is correct
@@ -229,4 +229,44 @@ router.get("/loggedin", async (req, res) => {
   }
   return res.json(false);
 });
+
+// Route for borrowing
+router.put("/borrow", protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const amountToBorrow = parseFloat(req.body.amountToBorrow);
+
+    // Find the user by ID (optional, you can directly use userId)
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the user already has an existing debt
+    if (user.borrowedBalance > 0) {
+      return res
+        .status(400)
+        .json({
+          message: "You must repay your existing debt before borrowing again",
+        });
+    }
+
+    // Update the borrowed balance and main balance
+    user.borrowedBalance = amountToBorrow;
+    user.accountBalance = amountToBorrow;
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    return res.json({
+      message: "Borrowed successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
