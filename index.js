@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const postRoute = require("./routes/postRoute");
-const userRoute = require("./routes/userRoute")
+const userRoute = require("./routes/userRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 const cors = require("cors");
 const app = express();
@@ -18,11 +18,7 @@ app.use(bodyParser.json());
 cors;
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-    ],
+    origin: ["http://localhost:5173", "*"],
     credentials: true,
   })
 );

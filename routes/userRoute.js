@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const verifier = new (require("email-verifier"))(process.env.EMAIL_VERIFY);
 
@@ -143,6 +144,52 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "emai please use a valid " });
     }
   });
+});
+
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate Request
+  if (!email || !password) {
+    return res.status(400).json({ error: "Please add email & password" });
+  }
+
+  // Check if user exists
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(400);
+    return res.status(400).json({ error: "user not found! please login" });
+  }
+
+  // User exists, check if password is correct
+  const passwordIsCorrect = await bcrypt.compare(password, user.password);
+
+  //   Generate Token
+  const token = generateToken(user._id);
+
+  // Send HTTP-only cookie
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    expires: new Date(Date.now() + 1000 * 86400), // 1 day
+    sameSite: "none",
+    secure: true,
+  });
+
+  if (user && passwordIsCorrect) {
+    const { _id, firstname, lastname, email, password } = user;
+    res.status(200).json({
+      _id,
+      firstname,
+      lastname,
+      email,
+      password,
+      token,
+    });
+  } else {
+    return res.status(400).json({ error: "invalid email or password" });
+  }
 });
 
 module.exports = router;
