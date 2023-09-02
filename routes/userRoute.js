@@ -24,7 +24,7 @@ function generateAccountNumber() {
 }
 
 router.post("/register", async (req, res) => {
-  const { firstname, lastname, password, email } = req.body;
+  const { fullname, password, email } = req.body;
 
   // Check if user email already exists
   const userExists = await User.findOne({ email });
@@ -46,6 +46,10 @@ router.post("/register", async (req, res) => {
       data.dnsCheck === "true" &&
       data.smtpCheck !== "false"
     ) {
+
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
+
+      
       // Send welcome email to the user
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
@@ -99,9 +103,10 @@ router.post("/register", async (req, res) => {
               <body>
                 <div class="container">
                   <h1>Welcome to EASYLEND,</h1>
-                  <p><strong>Dear ${firstname} ${lastname},</strong></p>
+                  <p><strong>Dear ${fullname},</strong></p>
                   <p>Welcome, We are excited to have you as a member.</p>
                   <p>Thank you for registering with us.</p>
+                  <span class="code">${code}</span>
                   <p class="signature">Best regards,<br>EASYLEND Team</p>
                 </div>
               </body>
@@ -119,11 +124,11 @@ router.post("/register", async (req, res) => {
         } else {
           // Create new user
           const user = User.create({
-            firstname,
-            lastname,
+            fullname,
             email,
             password,
             accountNumber: accountNumber,
+            verificationCode: code,
           });
 
           //   Generate Token
@@ -143,8 +148,7 @@ router.post("/register", async (req, res) => {
             console.log("success");
             res.status(200).json({
               _id,
-              firstname,
-              lastname,
+              fullname,
               email,
               password,
               token,
@@ -158,6 +162,37 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "emai please use a valid " });
     }
   });
+});
+
+router.post("/verifyemail", protect, async(req, res) => {
+  
+  try {
+    const userId = req.user._id; 
+    const { code } = req.body;
+
+    // Find the user by ID 
+    const user = await User.findById(userId);
+
+    if (!code) {
+      return res.status(400).json({ error: "please add youir verification code" });
+    }
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ error: "invalid verification code" });
+    }
+
+    // Set emailVerified to true
+    user.emailVerified = true;
+
+    // Save the updated user
+    await user.save();
+
+    res.json({ message: "Email verified successfully" });
+  
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.post("/login", async (req, res) => {
@@ -192,11 +227,10 @@ router.post("/login", async (req, res) => {
   });
 
   if (user && passwordIsCorrect) {
-    const { _id, firstname, lastname, email, password } = user;
+    const { _id, fullname, email, password } = user;
     res.status(200).json({
       _id,
-      firstname,
-      lastname,
+      fullname,
       email,
       password,
       token,
@@ -268,5 +302,40 @@ router.put("/borrow", protect, async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+// Route for withdrawing funds
+router.post("/withdraw", protect, async (req, res) => {
+    try {
+      const userId = req.user._id; 
+      const amountToWithdraw = parseFloat(req.body.amountToWithdraw);
+  
+      // Find the user by ID 
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      // Check if the user has enough balance for withdrawal
+      if (user.accountBalance < amountToWithdraw) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+  
+      // Update the account balance
+      user.accountBalance -= amountToWithdraw;
+  
+      // Save the updated user
+      const updatedUser = await user.save();
+  
+      return res.json({
+        message: "Withdrawal successful",
+        user: updatedUser,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
+  
 
 module.exports = router;

@@ -4,13 +4,10 @@ const bcrypt = require("bcryptjs");
 // Schema for both College and Primary Applications
 const userSchema = new mongoose.Schema(
   {
-    firstname: {
+   
+   fullname: {
       type: String,
-      required: [true, "Please add firstname"],
-    },
-    lastname: {
-      type: String,
-      required: [true, "Please add lastname"],
+      required: [true, "Please add fullname"],
     },
     email: {
       type: String,
@@ -26,6 +23,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please add a password"],
       minLength: [8, "Password must be up to 8 characters"],
+    },
+    verificationCode: {
+      type: String,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
     },
     accountNumber: Number,
     accountBalance: {
