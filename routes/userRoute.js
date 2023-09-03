@@ -168,13 +168,25 @@ router.post("/register", async (req, res) => {
           });
 
           if (user) {
-            const { _id, fullname, email, password } = user;
+            const {
+              _id,
+              fullname,
+              email,
+              emailVerified,
+              accountNumber,
+              accountBalance,
+              borrowedBalance,
+            } = user;
             console.log("Success");
 
             res.status(201).json({
               _id,
               fullname,
               email,
+              emailVerified,
+              accountNumber,
+              accountBalance,
+              borrowedBalance,
               token,
             });
           } else {
