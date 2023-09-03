@@ -26,6 +26,14 @@ function generateAccountNumber() {
 router.post("/register", async (req, res) => {
   const { fullname, password, email } = req.body;
 
+  if (!fullname || !email || !password) {
+    return res.status(400).json({ error: "please fill all fields" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: "password must be up to 8 characters" });
+  }
+
   // Check if user email already exists
   const userExists = await User.findOne({ email });
 
