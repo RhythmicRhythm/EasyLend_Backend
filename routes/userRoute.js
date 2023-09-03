@@ -175,7 +175,6 @@ router.post("/register", async (req, res) => {
               _id,
               fullname,
               email,
-              password,
               token,
             });
           } else {
