@@ -177,7 +177,7 @@ router.post("/register", async (req, res) => {
               accountBalance,
               borrowedBalance,
             } = user;
-            console.log("Success");
+            
 
             res.status(201).json({
               _id,
