@@ -46,10 +46,8 @@ router.post("/register", async (req, res) => {
       data.dnsCheck === "true" &&
       data.smtpCheck !== "false"
     ) {
-
       const code = Math.floor(1000 + Math.random() * 9000).toString();
 
-      
       // Send welcome email to the user
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
@@ -65,52 +63,76 @@ router.post("/register", async (req, res) => {
         to: email,
         subject: "Welcome to EASYLEND",
         html: `
-            <html>
-              <head>
-                <style>
-                  body {
-                    font-family: Arial, sans-serif;
-                    color: #333;
-                    background-color: #f9f9f9;
-                    margin: 0;
-                    padding: 0;
-                  }
-                  
-                  .container {
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    background-color: #fff;
-                  }
-                  
-                  h1 {
-                    font-size: 24px;
-                    font-weight: bold;
-                    margin-bottom: 20px;
-                  }
-                  
-                  p {
-                    margin-bottom: 10px;
-                  }
-                  
-                  .signature {
-                    margin-top: 20px;
-                    font-style: italic;
-                    color: #777;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h1>Welcome to EASYLEND,</h1>
-                  <p><strong>Dear ${fullname},</strong></p>
-                  <p>Welcome, We are excited to have you as a member.</p>
-                  <p>Thank you for registering with us.</p>
-                  <span class="code">${code}</span>
-                  <p class="signature">Best regards,<br>EASYLEND Team</p>
-                </div>
-              </body>
-            </html>
+      
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: 'Arial', sans-serif;
+              color: #333;
+              background-color: #f9f9f9;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #fff;
+              border-radius: 10px;
+              box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            h1 {
+              font-size: 28px;
+              font-weight: bold;
+              margin-bottom: 20px;
+              color: #007bff;
+            }
+            
+            p {
+              font-size: 16px;
+              margin-bottom: 15px;
+              line-height: 1.6;
+            }
+            
+            strong {
+              font-weight: bold;
+            }
+            
+            .code {
+              font-size: 18px;
+              font-weight: bold;
+              color: #007bff;
+            }
+            
+            .signature {
+              margin-top: 20px;
+              font-style: italic;
+              color: #777;
+            }
+            
+            .elegant {
+              font-size: 18px;
+              font-style: italic;
+              color: #007bff;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Welcome to EASYLEND</h1>
+            <p><strong>Dear ${fullname},</strong></p>
+            <p>We are delighted to extend our warmest greetings as you join the EASYLEND community.</p>
+            <p>Thank you for choosing EASYLEND for your financial needs.</p>
+            
+            <p>Your verification code is: <span class="code">${code}</span></p>
+            <p class="signature">Warm regards,<br>EASYLEND Team</p>
+          </div>
+        </body>
+        </html>
+        
           `,
       };
 
@@ -118,12 +140,14 @@ router.post("/register", async (req, res) => {
       const accountNumber = generateAccountNumber();
 
       // Attempt to send the welcome email
-      transporter.sendMail(mailOptions, (error) => {
+      transporter.sendMail(mailOptions, async (error) => {
         if (error) {
-          return res.status(400).json({ error: "error sending mail" });
+          return res
+            .status(400)
+            .json({ error: "error sending verification email" });
         } else {
           // Create new user
-          const user = User.create({
+          const user = await User.create({
             fullname,
             email,
             password,
@@ -144,9 +168,10 @@ router.post("/register", async (req, res) => {
           });
 
           if (user) {
-            const { _id, firstname, lastname, email, password } = user;
-            console.log("success");
-            res.status(200).json({
+            const { _id, fullname, email, password } = user;
+            console.log("Success");
+
+            res.status(201).json({
               _id,
               fullname,
               email,
@@ -154,27 +179,30 @@ router.post("/register", async (req, res) => {
               token,
             });
           } else {
-            res.status(400).json({ error: "error" });
+            res.status(400).json({ error: "Error" });
           }
         }
       });
     } else {
-      return res.status(400).json({ error: "emai please use a valid " });
+      return res
+        .status(400)
+        .json({ error: "Please use a valid email address" });
     }
   });
 });
 
-router.post("/verifyemail", protect, async(req, res) => {
-  
+router.post("/verifyemail", protect, async (req, res) => {
   try {
-    const userId = req.user._id; 
+    const userId = req.user._id;
     const { code } = req.body;
 
-    // Find the user by ID 
+    // Find the user by ID
     const user = await User.findById(userId);
 
     if (!code) {
-      return res.status(400).json({ error: "please add youir verification code" });
+      return res
+        .status(400)
+        .json({ error: "please add youir verification code" });
     }
     if (user.verificationCode !== code) {
       return res.status(400).json({ error: "invalid verification code" });
@@ -187,8 +215,6 @@ router.post("/verifyemail", protect, async(req, res) => {
     await user.save();
 
     res.json({ message: "Email verified successfully" });
-  
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
@@ -279,11 +305,9 @@ router.put("/borrow", protect, async (req, res) => {
 
     // Check if the user already has an existing debt
     if (user.borrowedBalance > 0) {
-      return res
-        .status(400)
-        .json({
-          message: "You must repay your existing debt before borrowing again",
-        });
+      return res.status(400).json({
+        message: "You must repay your existing debt before borrowing again",
+      });
     }
 
     // Update the borrowed balance and main balance
@@ -305,37 +329,36 @@ router.put("/borrow", protect, async (req, res) => {
 
 // Route for withdrawing funds
 router.post("/withdraw", protect, async (req, res) => {
-    try {
-      const userId = req.user._id; 
-      const amountToWithdraw = parseFloat(req.body.amountToWithdraw);
-  
-      // Find the user by ID 
-      const user = await User.findById(userId);
-  
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-  
-      // Check if the user has enough balance for withdrawal
-      if (user.accountBalance < amountToWithdraw) {
-        return res.status(400).json({ message: "Insufficient balance" });
-      }
-  
-      // Update the account balance
-      user.accountBalance -= amountToWithdraw;
-  
-      // Save the updated user
-      const updatedUser = await user.save();
-  
-      return res.json({
-        message: "Withdrawal successful",
-        user: updatedUser,
-      });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Internal Server Error" });
+  try {
+    const userId = req.user._id;
+    const amountToWithdraw = parseFloat(req.body.amountToWithdraw);
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  });
-  
+
+    // Check if the user has enough balance for withdrawal
+    if (user.accountBalance < amountToWithdraw) {
+      return res.status(400).json({ message: "Insufficient balance" });
+    }
+
+    // Update the account balance
+    user.accountBalance -= amountToWithdraw;
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    return res.json({
+      message: "Withdrawal successful",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 module.exports = router;

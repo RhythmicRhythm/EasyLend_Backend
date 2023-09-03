@@ -4,8 +4,7 @@ const bcrypt = require("bcryptjs");
 // Schema for both College and Primary Applications
 const userSchema = new mongoose.Schema(
   {
-   
-   fullname: {
+    fullname: {
       type: String,
       required: [true, "Please add fullname"],
     },
@@ -33,12 +32,12 @@ const userSchema = new mongoose.Schema(
     },
     accountNumber: Number,
     accountBalance: {
-        type: Number,
-        default: 0,
+      type: Number,
+      default: 0,
     },
     borrowedBalance: {
-        type: Number,
-        default: 0,
+      type: Number,
+      default: 0,
     },
   },
   {
