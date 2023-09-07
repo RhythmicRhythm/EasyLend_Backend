@@ -31,7 +31,9 @@ router.post("/register", async (req, res) => {
   }
 
   if (password.length < 8) {
-    return res.status(400).json({ error: "password must be up to 8 characters" });
+    return res
+      .status(400)
+      .json({ error: "password must be up to 8 characters" });
   }
 
   // Check if user email already exists
@@ -150,6 +152,7 @@ router.post("/register", async (req, res) => {
       // Attempt to send the welcome email
       transporter.sendMail(mailOptions, async (error) => {
         if (error) {
+          console.log(error);
           return res
             .status(400)
             .json({ error: "error sending verification email" });
@@ -185,7 +188,6 @@ router.post("/register", async (req, res) => {
               accountBalance,
               borrowedBalance,
             } = user;
-            
 
             res.status(201).json({
               _id,
@@ -282,6 +284,33 @@ router.post("/login", async (req, res) => {
     });
   } else {
     return res.status(400).json({ error: "invalid email or password" });
+  }
+});
+router.get("/getuser", protect, async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    const {
+      _id,
+      fullname,
+      email,
+      emailVerified,
+      accountNumber,
+      accountBalance,
+      borrowedBalance,
+    } = user;
+
+    res.status(201).json({
+      _id,
+      fullname,
+      email,
+      emailVerified,
+      accountNumber,
+      accountBalance,
+      borrowedBalance,
+    });
+  } else {
+    res.status(400).json({ error: "user not found" });
   }
 });
 
