@@ -3,7 +3,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
-const postRoute = require("./routes/postRoute");
 const userRoute = require("./routes/userRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 const cors = require("cors");

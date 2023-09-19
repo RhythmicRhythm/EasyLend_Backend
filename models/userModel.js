@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// Schema for both College and Primary Applications
 const userSchema = new mongoose.Schema(
   {
     fullname: {
